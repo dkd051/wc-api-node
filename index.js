@@ -122,7 +122,7 @@ WooCommerceAPI.prototype._getUrl = function(endpoint) {
  *
  * @return {Object}
  */
-WooCommerceAPI.prototype._getOAuth = function() {
+WooCommerceAPI.prototype._getOAuth = function(url) {
   var data = {
     consumer: {
       key: this.consumerKey,
@@ -130,7 +130,9 @@ WooCommerceAPI.prototype._getOAuth = function() {
     },
     signature_method: 'HMAC-SHA256',
     hash_function: function(base_string, key) {
-        return crypto.createHmac('sha256', key).update(base_string)
+        var urlPath = _url.parse(url).pathname;
+        var encodedPathParam = encodeURIComponent('&q=' + encodeURIComponent(urlPath));
+        return crypto.createHmac('sha256', key).update(base_string + encodedPathParam)
           .digest('base64');
     }
   };
@@ -183,7 +185,7 @@ WooCommerceAPI.prototype._request = function(method, endpoint, data, callback) {
       params.strictSSL = false;
     }
   } else {
-    params.qs = this._getOAuth().authorize({
+    params.qs = this._getOAuth(url).authorize({
       url: url,
       method: method
     });
